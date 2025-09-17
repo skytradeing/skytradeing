@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SkyTrading</title>
+  <style>
+    body {margin:0;font-family:sans-serif;background:#0f172a;color:white;}
+    .hero {padding:50px;text-align:center;}
+    h1 {font-size:3rem;margin-bottom:20px;}
+    .muted {color:#94a3b8;font-size:1.1rem;line-height:1.6;}
+    .cta {display:inline-block;padding:12px 24px;margin-top:20px;border-radius:8px;
+      background:linear-gradient(90deg,#6366f1,#9333ea);font-weight:bold;cursor:pointer;}
+    .section {padding:40px;text-align:center;}
+    /* Dashboard */
+    #dashboard {display:none;padding:20px;}
+    .balance {background:#1e293b;padding:20px;border-radius:12px;text-align:center;margin-bottom:20px;}
+    .balance img {width:50px;margin-bottom:10px;}
+    .nav-links {display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:20px;}
+    .nav-links div {cursor:pointer;padding:8px 12px;background:#334155;border-radius:8px;}
+    .modal {display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+      background:rgba(0,0,0,0.7);justify-content:center;align-items:center;}
+    .modal-content {background:#1e293b;padding:20px;border-radius:12px;min-width:300px;max-width:400px;}
+    .close {float:right;cursor:pointer;}
+    input,textarea {width:100%;margin-bottom:10px;padding:8px;border-radius:6px;border:none;}
+    button {padding:10px;width:100%;border:none;border-radius:8px;
+      background:linear-gradient(90deg,#6366f1,#9333ea);color:white;font-weight:bold;cursor:pointer;}
+    #logoutBtn {background:linear-gradient(90deg,#ef4444,#dc2626);margin-top:20px;}
+    #adminDot {width:10px;height:10px;background:red;border-radius:50%;cursor:pointer;position:fixed;bottom:10px;right:10px;}
+    .coins-grid {display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;}
+    .coin {background:#1e293b;padding:10px;border-radius:8px;text-align:center;cursor:pointer;}
+  </style>
+</head>
+<body>
+  <!-- Landing Page -->
+  <div id="landingPage">
+    <div class="hero">
+      <h1>SkyTrading</h1>
+      <p class="muted">
+        SkyTrading has been building trust since <b>2020</b>.  
+        We are a demo trading platform where users can simulate cryptocurrency trading,  
+        learn strategies, and prepare for real financial markets.  
+      </p>
+      <div class="cta" id="getStartedBtn">Get Started</div>
+      <div class="cta" id="landingLoginBtn" style="background:linear-gradient(90deg,#06b6d4,#7c3aed);">Login</div>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboard">
+    <div class="balance">
+      <img src="https://cdn-icons-png.flaticon.com/512/833/833524.png" alt="Wallet">
+      <h2>Balance: $<span id="userBalance">0.00</span></h2>
+    </div>
+
+    <div class="nav-links">
+      <div onclick="openDeposit()">Deposit</div>
+      <div onclick="openWithdraw()">Withdraw</div>
+      <div onclick="openReferral()">Referral</div>
+      <div onclick="openMarket()">Market</div>
+      <div onclick="openAbout()">About Us</div>
+      <div onclick="openOther()">Other (History)</div>
+    </div>
+
+    <div id="dashboardContent"></div>
+    <button id="logoutBtn" onclick="logout()">Logout</button>
+  </div>
+
+  <!-- Signup Modal -->
+  <div class="modal" id="signupModal">
+    <div class="modal-content">
+      <span class="close" onclick="hide(signupModal)">&times;</span>
+      <h2>Sign Up</h2>
+      <input type="text" id="signupUsername" placeholder="Username">
+      <input type="email" id="signupEmail" placeholder="Email">
+      <input type="password" id="signupPassword" placeholder="Password">
+      <button onclick="signup()">Sign Up</button>
+    </div>
+  </div>
+
+  <!-- Login Modal -->
+  <div class="modal" id="loginModal">
+    <div class="modal-content">
+      <span class="close" onclick="hide(loginModal)">&times;</span>
+      <h2>Login</h2>
+      <input type="text" id="loginUsername" placeholder="Username">
+      <input type="password" id="loginPassword" placeholder="Password">
+      <button onclick="login()">Login</button>
+    </div>
+  </div>
+
+  <!-- Deposit Modal -->
+  <div class="modal" id="depositModal">
+    <div class="modal-content">
+      <span class="close" onclick="hide(depositModal)">&times;</span>
+      <h2>Deposit</h2>
+      <p>Send your deposit to this LTC wallet:</p>
+      <b>MKXw4UeQaU42x2FLLBiM9GYiHVCwC1QcoB</b>
+      <input type="number" id="depositAmount" placeholder="Enter amount in $">
+      <input type="text" id="depositTx" placeholder="Transaction ID or Wallet Used">
+      <button onclick="submitDeposit()">Submit Deposit</button>
+    </div>
+  </div>
+
+  <!-- Withdraw Modal -->
+  <div class="modal" id="withdrawModal">
+    <div class="modal-content">
+      <span class="close" onclick="hide(withdrawModal)">&times;</span>
+      <h2>Withdraw</h2>
+      <input type="text" id="withdrawAddress" placeholder="Your Wallet Address">
+      <input type="number" id="withdrawAmount" placeholder="Amount to withdraw">
+      <input type="password" id="withdrawPassword" placeholder="Your account password">
+      <button onclick="submitWithdraw()">Submit Withdrawal</button>
+    </div>
+  </div>
+
+  <!-- Coin Trade Modal -->
+  <div class="modal" id="tradeModal">
+    <div class="modal-content">
+      <span class="close" onclick="hide(tradeModal)">&times;</span>
+      <h2 id="tradeTitle">Trade Coin</h2>
+      <p id="tradePrice"></p>
+      <input type="number" id="tradeAmount" placeholder="Amount in $">
+      <button onclick="buyCoin()">Buy</button>
+      <button onclick="sellCoin()">Sell</button>
+    </div>
+  </div>
+
+  <!-- Admin Dot -->
+  <div id="adminDot" onclick="adminAccess()"></div>
+
+  <script>
+    function show(el){ el.style.display='flex'; }
+    function hide(el){ el.style.display='none'; }
+
+    const landingPage = document.getElementById('landingPage');
+    const dashboard = document.getElementById('dashboard');
+    const signupModal = document.getElementById('signupModal');
+    const loginModal = document.getElementById('loginModal');
+    const depositModal = document.getElementById('depositModal');
+    const withdrawModal = document.getElementById('withdrawModal');
+    const tradeModal = document.getElementById('tradeModal');
+    const userBalanceEl = document.getElementById('userBalance');
+    const dashboardContent = document.getElementById('dashboardContent');
+
+    let currentUser = null;
+    let users = JSON.parse(localStorage.getItem('users')) || [];
+    let deposits = JSON.parse(localStorage.getItem('deposits')) || [];
+    let withdrawals = JSON.parse(localStorage.getItem('withdrawals')) || [];
+    let trades = JSON.parse(localStorage.getItem('trades')) || [];
+    let coins = [];
+
+    // Generate 100 coins
+    for(let i=1;i<=100;i++){
+      coins.push({name:"Coin"+i, price: (Math.random()*100).toFixed(2)});
+    }
+
+    // Update coin prices randomly
+    setInterval(()=>{
+      coins.forEach(c=>{
+        let change = (Math.random()*2-1).toFixed(2);
+        c.price = (parseFloat(c.price)+parseFloat(change)).toFixed(2);
+        if(c.price<0.1) c.price="0.10";
+      });
+      if(dashboardContent.dataset.view==="market") renderMarket();
+    },3000);
+
+    // Landing actions
+    document.getElementById('getStartedBtn').addEventListener('click', ()=> show(signupModal));
+    document.getElementById('landingLoginBtn').addEventListener('click', ()=> show(loginModal));
+
+    function signup(){
+      const username = document.getElementById('signupUsername').value;
+      const email = document.getElementById('signupEmail').value;
+      const password = document.getElementById('signupPassword').value;
+      if(!username || !email || !password){alert("Fill all fields");return;}
+      if(users.find(u=>u.username===username)){alert("Username exists");return;}
+      const user = {username,email,password,balance:0};
+      users.push(user);
+      localStorage.setItem('users',JSON.stringify(users));
+      alert("Signup successful! You can login now.");
+      hide(signupModal);
+    }
+
+    function login(){
+      const username = document.getElementById('loginUsername').value;
+      const password = document.getElementById('loginPassword').value;
+      const user = users.find(u=>u.username===username && u.password===password);
+      if(!user){alert("Invalid credentials");return;}
+      loginUser(user);
+      hide(loginModal);
+    }
+
+    function loginUser(user){
+      currentUser = user;
+      landingPage.style.display = 'none';
+      dashboard.style.display = 'block';
+      userBalanceEl.innerText = user.balance.toFixed(2);
+    }
+
+    function logout(){
+      currentUser=null;
+      dashboard.style.display='none';
+      landingPage.style.display='block';
+    }
+
+    // Deposit
+    function openDeposit(){ show(depositModal); }
+    function submitDeposit(){
+      const amount = parseFloat(document.getElementById('depositAmount').value);
+      const tx = document.getElementById('depositTx').value;
+      if(!amount || !tx){alert("Fill all fields");return;}
+      deposits.push({username:currentUser.username, amount, tx, approved:false});
+      localStorage.setItem('deposits',JSON.stringify(deposits));
+      alert("Deposit submitted! Waiting for admin approval.");
+      hide(depositModal);
+    }
+
+    // Withdraw
+    function openWithdraw(){ show(withdrawModal); }
+    function submitWithdraw(){
+      const address = document.getElementById('withdrawAddress').value;
+      const amount = parseFloat(document.getElementById('withdrawAmount').value);
+      const password = document.getElementById('withdrawPassword').value;
+      if(password!==currentUser.password){alert("Wrong password!");return;}
+      withdrawals.push({username:currentUser.username, amount, address, approved:false});
+      localStorage.setItem('withdrawals',JSON.stringify(withdrawals));
+      alert("Withdrawal submitted! Waiting for admin approval.");
+      hide(withdrawModal);
+    }
+
+    // Other (History)
+    function openOther(){
+      let html = "<h2>Your History</h2>";
+      html += "<h3>Deposits</h3>";
+      deposits.filter(d=>d.username===currentUser?.username).forEach(d=>{
+        html += `<div>Amount: $${d.amount} | Tx: ${d.tx} | Status: ${d.approved? "Approved":"Pending"}</div>`;
+      });
+      html += "<h3>Withdrawals</h3>";
+      withdrawals.filter(w=>w.username===currentUser?.username).forEach(w=>{
+        html += `<div>Amount: $${w.amount} | Address: ${w.address} | Status: ${w.approved? "Approved":"Pending"}</div>`;
+      });
+      html += "<h3>Trades</h3>";
+      trades.filter(t=>t.username===currentUser?.username).forEach(t=>{
+        html += `<div>${t.type} ${t.coin} for $${t.amount} | Status: ${t.status}</div>`;
+      });
+      dashboardContent.innerHTML = html;
+    }
+
+    // Referral
+    function openReferral(){
+      dashboardContent.innerHTML = `
+        <h2>Your Referral Link</h2>
+        <input type="text" value="https://skytrading.com/ref?user=${currentUser?.username||'guest'}" readonly>
+        <p>Invite friends and earn $0.5 whenever they deposit.</p>
+      `;
+    }
+
+    // About
+    function openAbout(){
+      dashboardContent.innerHTML = `
+        <h2>About Us</h2>
+        <p>SkyTrading has been helping people learn and practice crypto trading since 2020.</p>
+      `;
+    }
+
+    // Market
+    function openMarket(){
+      dashboardContent.dataset.view="market";
+      renderMarket();
+    }
+
+    function renderMarket(){
+      let html="<h2>Market</h2><div class='coins-grid'>";
+      coins.forEach((c,i)=>{
+        html+=`<div class="coin" onclick="openTrade(${i})">${c.name}<br>$${c.price}</div>`;
+      });
+      html+="</div>";
+      dashboardContent.innerHTML=html;
+    }
+
+    let selectedCoin=null;
+    function openTrade(i){
+      selectedCoin=coins[i];
+      document.getElementById('tradeTitle').innerText = "Trade "+selectedCoin.name;
+      document.getElementById('tradePrice').innerText = "Price: $"+selectedCoin.price;
+      document.getElementById('tradeAmount').value="";
+      show(tradeModal);
+    }
+
+    function buyCoin(){
+      const amt=parseFloat(document.getElementById('tradeAmount').value);
+      if(!amt || amt<=0){alert("Enter valid amount");return;}
+      if(currentUser.balance<amt){alert("Not enough balance!");return;}
+      currentUser.balance-=amt;
+      trades.push({username:currentUser.username, coin:selectedCoin.name, amount:amt, type:"Buy", status:"Completed"});
+      localStorage.setItem('trades',JSON.stringify(trades));
+      localStorage.setItem('users',JSON.stringify(users));
+      userBalanceEl.innerText=currentUser.balance.toFixed(2);
+      alert("Bought "+selectedCoin.name+" for $"+amt);
+      hide(tradeModal);
+    }
+
+    function sellCoin(){
+      const amt=parseFloat(document.getElementById('tradeAmount').value);
+      if(!amt || amt<=0){alert("Enter valid amount");return;}
+      trades.push({username:currentUser.username, coin:selectedCoin.name, amount:amt, type:"Sell", status:"Pending"});
+      localStorage.setItem('trades',JSON.stringify(trades));
+      alert("Sell request submitted. Waiting for admin approval.");
+      hide(tradeModal);
+    }
+
+    // Admin
+    function adminAccess(){
+      const pass = prompt("Enter Admin Password:");
+      if(pass==="1234567k"){
+        let html = "<h2>Admin Panel</h2><h3>Users</h3>";
+        users.forEach(u=> html+=`<div>${u.username} - Balance: $${u.balance.toFixed(2)} 
+          <button onclick="addBalance('${u.username}')">Add Balance</button></div>`);
+        html += "<h3>Deposits</h3>";
+        deposits.forEach((d,i)=> html+=`<div>${d.username} deposited $${d.amount} Tx:${d.tx} 
+          ${d.approved? "(Approved)" : `<button onclick='approveDeposit(${i})'>Approve</button>`}</div>`);
+        html += "<h3>Withdrawals</h3>";
+        withdrawals.forEach((w,i)=> html+=`<div>${w.username} requested $${w.amount} to ${w.address} 
+          ${w.approved? "(Approved)" : `<button onclick='approveWithdraw(${i})'>Approve</button>`}</div>`);
+        html += "<h3>Trades (Sell)</h3>";
+        trades.forEach((t,i)=>{if(t.type==="Sell" && t.status==="Pending"){
+          html+=`<div>${t.username} wants to SELL ${t.coin} for $${t.amount} 
+            <button onclick='approveSell(${i})'>Approve</button></div>`;
+        }});
+        document.body.innerHTML = html;
+      } else { alert("Wrong password!"); }
+    }
+
+    function approveDeposit(i){
+      const d = deposits[i];
+      let u = users.find(u=>u.username===d.username);
+      if(u && !d.approved){
+        u.balance += d.amount;
+        deposits[i].approved=true;
+        localStorage.setItem('users',JSON.stringify(users));
+        localStorage.setItem('deposits',JSON.stringify(deposits));
+        alert("Deposit approved.");
+      }
+    }
+
+    function approveWithdraw(i){
+      const w = withdrawals[i];
+      let u = users.find(u=>u.username===w.username);
+      if(u && !w.approved){
+        if(u.balance >= w.amount){
+          u.balance -= w.amount;
+          withdrawals[i].approved=true;
+          localStorage.setItem('users',JSON.stringify(users));
+          localStorage.setItem('withdrawals',JSON.stringify(withdrawals));
+          alert("Withdrawal approved.");
+        } else {
+          alert("User does not have enough balance!");
+        }
+      }
+    }
+
+    function approveSell(i){
+      const t = trades[i];
+      let u = users.find(u=>u.username===t.username);
+      if(u && t.status==="Pending"){
+        u.balance += t.amount;
+        trades[i].status="Approved";
+        localStorage.setItem('users',JSON.stringify(users));
+        localStorage.setItem('trades',JSON.stringify(trades));
+        alert("Sell approved and balance updated.");
+      }
+    }
+
+    function addBalance(username){
+      const amount = parseFloat(prompt("Enter amount to add:"));
+      let u = users.find(u=>u.username===username);
+      if(u && amount){
+        u.balance += amount;
+        localStorage.setItem('users',JSON.stringify(users));
+        alert("Balance added.");
+      }
+    }
+  </script>
+</body>
+</html>
